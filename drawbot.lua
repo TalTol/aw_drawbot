@@ -272,8 +272,12 @@ function moveEventHandler(cmd)
 			base_inaccuracy = weapon_inaccuracy;
 		end
 
-		if (current_shoot_index == #target_angles) then
-			current_shoot_index = nil;
+		if (current_shoot_index == 0) then
+			return;
+		end
+
+		if (current_shoot_index > #target_angles) then
+			current_shoot_index = 0;
 			return;
 		end
 
