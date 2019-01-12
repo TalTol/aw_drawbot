@@ -4,6 +4,7 @@ local DRAWBOT_PAINT_ENABLE_CB = gui.Checkbox(gui.Reference("MISC", "AUTOMATION",
 local DRAWBOT_PREVIEW_KB = gui.Keybox(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_PREVIEW_KB", "Preview key", 0);
 local DRAWBOT_DRAW_KB = gui.Keybox(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_DRAW_KB", "Drawing key", 0);
 local SCALE_SL = gui.Slider(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_SCALE_SL", "Scale", 100, 1, 1000);
+local INACCURACY_SL = gui.Slider(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_INACCURACY_SL", "Inaccuracy % max", 30, 0, 100);
 
 local EDITOR_POSITION_X, EDITOR_POSITION_Y = 50, 50;
 local EDITOR_SIZE_X, EDITOR_SIZE_Y = 400, 400;
@@ -17,9 +18,10 @@ local show, pressed = false, true;
 local drawing = {};
 local is_dragging = false;
 local is_resizing = false;
-local is_shooting = true;
+local is_shooting = false;
 local dragging_offset_x, dragging_offset_y;
 local current_shoot_index;
+local base_inaccuracy;
 
 function drawEditorHandler()
 	show = DRAWBOT_PAINT_ENABLE_CB:GetValue();
@@ -45,14 +47,13 @@ function drawEditorHandler()
 
 	if (draw_key_down == true and is_shooting == false) then
 		is_shooting = true;
-		client.Command("+attack", true);
 	end
 
 	if (is_shooting == true and draw_key_down == false) then
 		is_shooting = false;
 		current_shoot_index = nil;
 		center_va_x, center_va_y, center_va_z = nil, nil, nil;
-		client.Command("-attack", true);
+		base_inaccuracy = 0;
 	end
 
 	if (show_editor == true and is_dragging == true and left_mouse_down == false) then
@@ -246,6 +247,17 @@ function moveEventHandler(cmd)
 			return;
 		end
 
+		local my_weapon = local_player:GetPropEntity("m_hActiveWeapon");
+		if (my_weapon == nil) then
+			return nil;
+		end
+
+		local weapon_inaccuracy = my_weapon:GetWeaponInaccuracy();
+
+		if (current_shoot_index ~= nil and (weapon_inaccuracy - base_inaccuracy) / base_inaccuracy * 100 > INACCURACY_SL:GetValue()) then
+			return;
+		end
+
 		local my_x, my_y, my_z = local_player:GetBonePosition(8);
 
 		local target_angles = getTargetLocations(local_player);
@@ -257,6 +269,7 @@ function moveEventHandler(cmd)
 		if (current_shoot_index == nil) then
 			current_shoot_index = 1;
 			center_va_x, center_va_y, center_va_z = va_x, va_y, va_z;
+			base_inaccuracy = weapon_inaccuracy;
 		end
 
 		if (current_shoot_index == #target_angles) then
@@ -272,6 +285,7 @@ function moveEventHandler(cmd)
 		local va_x, va_y, va_z = getAngle(my_x, my_y, my_z, target.x, target.y, target.z);
 
 		cmd:SetViewAngles(va_x, va_y, va_z);
+		cmd:SetButtons(1);
 	end
 end
 
