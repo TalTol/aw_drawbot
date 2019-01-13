@@ -5,6 +5,7 @@ local DRAWBOT_PREVIEW_KB = gui.Keybox(gui.Reference("MISC", "AUTOMATION", "Other
 local DRAWBOT_DRAW_KB = gui.Keybox(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_DRAW_KB", "Drawing key", 0);
 local SCALE_SL = gui.Slider(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_SCALE_SL", "Scale", 100, 1, 1000);
 local INACCURACY_SL = gui.Slider(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_INACCURACY_SL", "Inaccuracy % max", 30, 0, 100);
+local DENSITY_SL = gui.Slider(gui.Reference("MISC", "AUTOMATION", "Other"), "DRAWBOT_DENSITY_SL", "Density (pixel distance)", 20, 0, 40);
 
 local EDITOR_POSITION_X, EDITOR_POSITION_Y = 50, 50;
 local EDITOR_SIZE_X, EDITOR_SIZE_Y = 400, 400;
@@ -130,6 +131,11 @@ function drawEditor(mouse_x, mouse_y)
 		local point = drawing[i];
 		draw.RoundedRectFill(EDITOR_POSITION_X + point.x, EDITOR_POSITION_Y + point.y, EDITOR_POSITION_X + point.x, EDITOR_POSITION_Y + point.y);
 	end
+
+	if (#drawing > 0) then
+		draw.Color(255, 255, 255, 255);
+		draw.Text(EDITOR_POSITION_X, EDITOR_POSITION_Y + EDITOR_SIZE_Y  + CLEAR_TEXT_H + 5 + 3, string.format("%i bullets", #drawing));
+	end
 end
 
 function leftMouseHandler(mouse_x, mouse_y)
@@ -176,14 +182,14 @@ function leftMouseHandler(mouse_x, mouse_y)
 		return;
 	end
 
-	local points_in_radius = getPointsInRadius(mouse_x - EDITOR_POSITION_X, mouse_y - EDITOR_POSITION_Y, 20);
+	local points_in_radius = getPointsInRadius(mouse_x - EDITOR_POSITION_X, mouse_y - EDITOR_POSITION_Y, DENSITY_SL:GetValue());
 	if (#points_in_radius == 0) then
 		table.insert(drawing, {x=mouse_x - EDITOR_POSITION_X, y=mouse_y - EDITOR_POSITION_Y});
 	end
 end
 
 function rightMouseHandler(mouse_x, mouse_y)
-	local points_in_radius = getPointsInRadius(mouse_x - EDITOR_POSITION_X, mouse_y - EDITOR_POSITION_Y, 20);
+	local points_in_radius = getPointsInRadius(mouse_x - EDITOR_POSITION_X, mouse_y - EDITOR_POSITION_Y, DENSITY_SL:GetValue());
 
 	for i=1, #points_in_radius do
 		local point = points_in_radius[i];
