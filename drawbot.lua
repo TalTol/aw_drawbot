@@ -258,7 +258,7 @@ function moveEventHandler(cmd)
 			return nil;
 		end
 
-		local punch_angle = local_player:GetPropFloat("localdata", "m_Local", "m_aimPunchAngle");
+		local punch_angle_x, punch_angle_y = local_player:GetPropVector("localdata", "m_Local", "m_aimPunchAngle");
 		local weapon_recoil_scale = client.GetConVar("weapon_recoil_scale");
 		local weapon_accuracy_nospread = client.GetConVar("weapon_accuracy_nospread");
 
@@ -266,12 +266,11 @@ function moveEventHandler(cmd)
 			return;
 		end
 
-		if (punch_angle == nil) then
+		if (punch_angle_x == nil or punch_angle_y == nil) then
 			return;
 		end
 
-		punch_angle = punch_angle * weapon_recoil_scale;
-
+		punch_angle_x, punch_angle_y = punch_angle_x * weapon_recoil_scale, punch_angle_y * weapon_recoil_scale;
 		local weapon_inaccuracy = my_weapon:GetWeaponInaccuracy();
 
 		if (current_shoot_index ~= nil and (weapon_accuracy_nospread ~= 0 and INACCURACY_SL:GetValue() ~= 100 and (weapon_inaccuracy - base_inaccuracy) / base_inaccuracy * 100 > INACCURACY_SL:GetValue())) then
@@ -308,7 +307,7 @@ function moveEventHandler(cmd)
 
 		local va_x, va_y, va_z = getAngle(my_x, my_y, my_z, target.x, target.y, target.z);
 
-		cmd:SetViewAngles(va_x - punch_angle, va_y, va_z);
+		cmd:SetViewAngles(va_x - punch_angle_x, va_y - punch_angle_y, va_z);
 		cmd:SetButtons(1);
 	end
 end
